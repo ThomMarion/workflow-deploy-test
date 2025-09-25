@@ -5,3 +5,4 @@ Commit direto teste
 
 Novo teste de deploy
 Commit direto teste
+Novo teste com PR

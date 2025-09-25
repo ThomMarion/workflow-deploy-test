@@ -1,0 +1,42 @@
+name: Test Deploy Notification
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  resolve_pr_and_notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar GitHub CLI
+        run: sudo apt-get update && sudo apt-get install -y gh jq
+
+      - name: Encontrar PR associada ao commit
+        id: find_pr
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          PR_NUMBER=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --state merged \
+            --search "${{ github.sha }}" \
+            --json number \
+            --jq '.[0].number')
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "Nenhuma PR encontrada para o commit ${{ github.sha }}"
+            exit 1
+          fi
+
+          echo "PR encontrado: $PR_NUMBER"
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Simular chamada do workflow de notificação
+        run: |
+          echo "Chamando notify-on-deploy.yml com PR ${{ steps.find_pr.outputs.pr_number }}"
+
